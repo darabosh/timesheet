@@ -1,0 +1,158 @@
+{% extends "base.html" %}
+
+{%block content%}
+<div class="wrapper">
+    <section class="content">
+        <h2><i class="ico projects"></i>Projects</h2>
+        <div class="grey-box-wrap reports">
+            <a href="{% url 'projects:create_new_project' %}" class="link new-member-popup">Create new project</a>
+            
+            <div class="search-page">
+                <form action="{% url 'projects:projects' %}?page_number=1&search_term={{search_term}}&search_letter={{search_letter}}" method="GET">
+                    <input type="search" name="search_term" placeholder="Data {% if search_term == '' and search_letter == '' %}all{% elif search_term == '' %}starts with {{search_letter}}{% else %}that starts with {{search_letter}}, contains {{search_term}}{% endif %}" class="in-search" style="display: inline-block" />
+                    <input name="search_letter" type="hidden" value="{{search_letter}}">
+                    <input class="btn green" type="submit" value="Search">
+                    <a href="{% url 'projects:projects' %}?page_number=1&search_term=&search_letter=" class="btn green" style="line-height: 24px">List all</a>
+                </form>
+                
+            </div>
+            
+        </div>
+        <div class="new-member-wrap">
+            <div id="new-member" class="new-member-inner">
+                <h2>Create new project</h2>
+                <ul class="form">
+                    <li>
+                        <label>Project name:</label>
+                        <input type="text" class="in-text" />
+                    </li>								
+                    <li>
+                        <label>Description:</label>
+                        <input type="text" class="in-text" />
+                    </li>
+                    <li>
+                        <label>Customer:</label>
+                        <input type="text" class="in-text" />
+                    </li>
+                    <li>
+                        <label>Lead:</label>
+                        <input type="text" class="in-text" />
+                    </li>
+                </ul>
+                <div class="buttons">
+                    <div class="inner">
+                        <a href="javascript:;" class="btn green">Save</a>
+                    </div>
+                </div>
+            </div>
+        </div>
+        <div class="alpha">
+            <ul>
+                {% for letter in search_letters %}
+                    <li {% if search_letter == letter %}class="active"{% endif %} {% for disabled_letter in disabled_letters %}{% if disabled_letter == letter %}class="disabled"{% endif %}{% endfor %}>
+                        <a {% if letter not in disabled_letters %}href="{% url 'projects:projects' %}?search_letter={{letter}}"{% endif %}>{{letter}}</a>
+                    </li>
+                {% endfor %}					
+            </ul>
+        </div>
+        {% for project, form in projects_data %}
+            <div class="accordion-wrap clients">
+                <div class="item" onclick="openProject(this)">
+                    <div class="heading">
+                        <span>{{project}}</span>
+                        <i>+</i>
+                    </div>
+                    <div class="details">
+                        <form name="form" method="POST" action="{% url 'projects:projects' %}">
+                            {% csrf_token %}
+                            <ul class="form">
+                                <li>
+                                    <label>Project name:</label>
+                                    {{form.project_name}}
+                                </li>
+                                <li>
+                                    <label>Lead:</label>
+                                    {{form.lead}}
+                                </li>
+                            </ul>
+                            <ul class="form">
+                                <li>
+                                    <label>Description:</label>
+                                    {{form.description}}
+                                </li>
+                            </ul>
+                            <ul class="form last">
+                                <li>
+                                    <label>Customer:</label>
+                                    {{form.customer}}
+                                </li>
+                                <li style="display: none">
+                                    <label>Pk:</label>
+                                    {{form.pk}}                                    
+                                </li>
+                                <li>
+                                    <label>Archive:</label>
+                                    <input type="checkbox" name="archive" id="id_archive" {% if form.archive.value == True %}checked{% endif %}>
+                                </li>
+                            </ul>
+                            <div class="buttons">
+                                <div class="inner">
+                                    <input type="submit" class="btn green" value="Save">
+                                    <a href="/projects/delete_project?pk={{form.pk.value}}" class="btn red" style="line-height: 25px">Delete</a>
+                                </div>
+                            </div>
+                        </form>
+                        
+                    </div>
+                </div>
+            </div>
+        {% endfor %}
+        <div class="pagination">
+            <ul>
+                {% if page_number != 1 %}
+                    <li class="last">
+                        <a href="{% url 'projects:projects' %}?page_number={{previous_page}}&search_term={{search_term}}&search_letter={{search_letter}}">Previous</a>
+                    </li>
+                {% else %}
+                {% endif %}
+
+                {% for i in list_of_pages %}
+                    <li>
+                        {% if i != page_number %}
+                            <a href="{% url 'projects:projects' %}?page_number={{i}}&search_term={{search_term}}&search_letter={{search_letter}}">{{i}}</a>
+                        {% else %}
+                            <u><a href="{% url 'projects:projects' %}?page_number={{i}}&search_term={{search_term}}&search_letter={{search_letter}}">{{i}}</a></u>
+                        {% endif %}
+                    </li>
+                {% endfor %}
+
+                {% if page_number != number_of_pages %}
+                    <li class="last">
+                        <a href="{% url 'projects:projects' %}?page_number={{next_page}}&search_term={{search_term}}&search_letter={{search_letter}}">Next</a>
+                    </li>
+                {% else %}
+                {% endif %}
+            </ul>
+        </div>        
+    </section>			
+</div>
+{%endblock%}
+{% block open_headings %}
+<script>
+    function openProject(element) {
+        let headings = document.querySelectorAll(".item.open");
+        let details = document.querySelectorAll(".details");
+
+        for (let i = 0; i < headings.length; i++){
+            headings[i].classList = "item";
+        }
+
+        for (let i = 0; i < details.length; i++){
+            details[i].style.display = "none";
+        }        
+        
+        element.classList.add("open");
+        element.children[1].style.display = "block"  
+        }
+</script>
+{% endblock %}

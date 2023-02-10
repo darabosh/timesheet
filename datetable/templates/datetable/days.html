@@ -1,0 +1,172 @@
+{% extends "base.html" %}
+
+{% block content %}
+<div class="wrapper">
+	<section class="content">
+		<h2><i class="ico timesheet"></i>TimeSheet</h2>
+		<div class="grey-box-wrap">
+			<div class="top">
+				<a href="{% url 'datetable:days' %}?previous=1&first_day={{ first_day|date:'Y,m,d' }}" class="prev">previous week</a>
+				<span class="center">{{first_day|date:"F d"}} - {{last_day|date:"F d, Y"}}</span>
+				<a href="{% url 'datetable:days' %}?next=1&first_day={{ first_day|date:'Y,m,d' }}" class="next">next week</a>
+			</div>
+			<div class="bottom">
+				<ul class="days">
+					{% for day in list_of_days %}
+					<li {% if day == current_day %}class="active"{% endif %}>
+						<a href="{% url 'datetable:days' %}?current_day={{day|date:'Y,m,d'}}">
+							<b>{{day|date:"M d"}}</b>
+							<!-- <i>7.5</i> -->
+							<span>{{day|date:"l"}}</span>
+						</a>
+					</li>
+					{% endfor %}
+				</ul>
+			</div>
+		</div>
+		<table class="default-table">
+			<tr>
+				<th>
+					Client <em>*</em>
+				</th>
+				<th>
+					Project <em>*</em>
+				</th>
+				<th>
+					Category <em>*</em>
+				</th>
+				<th>Description</th>
+				<th class="small">
+					Time <em>*</em>
+				</th>
+				<th class="small">Overtime</th>
+			</tr>
+			<form name="form" method="POST" action="{% url 'datetable:days' %}?current_day={{current_day|date:'Y,m,d'}}">
+				{% csrf_token %}
+				{% for form in forms %}
+				<tr>
+					<td >
+						{{form.client}}
+					</td>
+					<td>
+						{{form.project}}
+					</td>
+					<td>
+						<select>
+							<option>Choose category</option>
+							<option>Front-End Development</option>
+							<option>Design</option>
+						</select>
+					</td>
+					<td class="medium">
+						{{form.description}}
+					</td>
+					<td class="small">
+						{{form.time}}
+					</td>
+					<td class="small">
+						{{form.overtime}}
+					</td>
+					<td style="display: none">
+						<label>Pk:</label>
+						{{form.pk}}                                    
+					</td>
+				</tr>
+				{% endfor %}
+				{% for form in blank_forms %}
+				<tr>
+					<td>
+						{{form.client}}
+					</td>
+					<td>
+						{{form.project}}
+					</td>
+					<td>
+						<select>
+							<option>Choose category</option>
+							<option>Front-End Development</option>
+							<option>Design</option>
+						</select>
+					</td>
+					<td class="medium">
+						{{form.description}}
+					</td>
+					<td class="small">
+						{{form.time}}
+					</td>
+					<td class="small">
+						{{form.overtime}}
+					</td>
+					<td style="display: none">
+						<label>Pk:</label>
+						{{form.pk}}                                    
+					</td>
+				</tr>
+				{% endfor %}
+				<tr>
+				<input class="btn green" type="submit" value="Save">
+				</tr>
+			</form>
+		</table>
+		<div class="total">
+			<a href="{% url 'datetable:datetable' %}"><i></i>back to monthly view</a>
+			<span>Total hours: <em onclick="test()">{{total_time}}</em></span>
+		</div>
+	</section>			
+</div>
+{% endblock %}
+{% block select_timeslot %}
+<script>
+	var selects_clients = document.querySelectorAll("#id_client");
+	var selects_projects = document.querySelectorAll("#id_project");	
+	async function makeRequest(url, method, body){
+
+		let headers = {
+			"X-Requested-With": "XMLHttpRequest",
+			"Content-Type": "application/json"
+		}
+
+		if (method == "post"){
+			const csrf = document.querySelector('[name=csrfmiddlewaretoken]').value
+			headers['X-CSRFToken'] = csrf
+		}
+
+		let response = await fetch(url, {
+			method: method,
+			headers: headers,
+			body: body
+		})
+
+		return await response.json()
+	}
+	async function get_projects_and_set_options(select,selector_number) {
+		
+		const data = await makeRequest('/datetable/days/ajax_get_clients_projects', method='post', body=JSON.stringify({'selector':select, 'selector_number':selector_number}))
+		let options = await data
+		selects_projects[options['selector_number']].options.length=0
+		if (options['projects_options'] == "Choose project:"){
+			var project_option = document.createElement("option");
+			project_option.text = options['projects_options'];
+			selects_projects[options['selector_number']].add(project_option);
+		}
+		else {
+		for (var j=0, len = options['projects_options'].length; j<len; j++){
+			var project_option = document.createElement("option");
+			project_option.text = options['projects_options'][j]['project_name'];
+			selects_projects[options['selector_number']].add(project_option);
+		}
+		}
+	}
+
+	function add_event_listeners_and_classes_to_selectors(){
+		
+		for (var i=0, len = selects_clients.length; i<len; i++){
+			selects_clients[i].addEventListener("change", (e) => {
+				get_projects_and_set_options(event.target.value,event.target.classList.value)});
+			selects_clients[i].classList.add(i);
+			selects_projects[i].classList.add(i);
+			}
+	}
+	add_event_listeners_and_classes_to_selectors();
+</script>
+{% endblock %}

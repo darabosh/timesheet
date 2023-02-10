@@ -1,0 +1,59 @@
+{% extends "base.html" %}
+
+
+{% block content %}
+<div class="wrapper">
+    <section class="content">
+        <h2><i class="ico timesheet"></i>TimeSheet</h2>
+        <div class="grey-box-wrap">
+            <div class="top">
+                <a href="{% url 'datetable:datetable' %}?previous=1&first_day_in_table={{ first_day_in_table|date:'Y,m,d' }}" class="prev">previous month</a>
+                <span class="center">{{current_month_and_year_for_date_table|date:"F, Y"}}</span>
+                <a href="{% url 'datetable:datetable' %}?next=1&first_day_in_table={{ first_day_in_table|date:'Y,m,d' }}" class="next">next month</a>
+            </div>
+            <div class="bottom">
+                
+            </div>
+        </div>
+        <table class="month-table">
+            <tr class="head">
+                <th><span>monday</span></th>
+                <th>tuesday</th>
+                <th>wednesday</th>
+                <th>thursday</th>
+                <th>friday</th>
+                <th>saturday</th>
+                <th>sunday</th>
+            </tr>
+            <tr class="mobile-head">
+                <th>mon</th>
+                <th>tue</th>
+                <th>wed</th>
+                <th>thu</th>
+                <th>fri</th>
+                <th>sat</th>
+                <th>sun</th>
+            </tr>
+            {% for list_of_data_in_row in list_of_data_for_each_date_in_table %}
+                <tr>
+                    {% for day, worked_time in list_of_data_in_row %}
+                        <td {% if day > today_date %}class="disable"{% endif %}{% if worked_time == 0 and day.month < current_month_and_year_for_date_table.month %}class="previous"{% elif worked_time == 0 and day.month == current_month_and_year_for_date_table.month %}class=""{% elif worked_time == 0 and day.month > current_month_and_year_for_date_table.month %}class="next"{% elif worked_time >= 7.5 and day.month < current_month_and_year_for_date_table.month %}class="positive previous"{% elif worked_time < 7.5 and day.month < current_month_and_year_for_date_table.month %}class="negative previous"{% elif worked_time >= 7.5 and day.month == current_month_and_year_for_date_table.month %}class="positive"{% elif worked_time < 7.5 and day.month == current_month_and_year_for_date_table.month %}class="negative"{% elif worked_time >= 7.5 and day.month > current_month_and_year_for_date_table.month %}class="positive next"{% elif worked_time < 7.5 and day.month > current_month_and_year_for_date_table.month %}class="negative next"{% endif %}>
+                            <div class="date">
+                                <span>{{day.day}}.</span>
+                            </div>
+                            <div class="hours">
+                                <a {% if day <= today_date %}href="{% url 'datetable:days' %}?current_day={{day|date:'Y,m,d'}}"{% endif %}>
+                                    Hours: <span>{{worked_time}}</span>
+                                </a>
+                            </div>
+                        </td>
+                    {% endfor %}
+                </tr>
+            {% endfor %}
+        </table>
+        <div class="total">
+            <span>Total hours: <em>{{ total_hours_that_month }}</em></span>
+        </div>
+    </section>			
+</div>
+{% endblock %}

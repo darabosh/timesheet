@@ -1,0 +1,26 @@
+{% extends 'base.html' %}
+
+{% block create_new %}
+
+<div class="wrapper">
+    <section class="content">
+        <div id="new-member" class="new-member-inner">
+            <h2><i class="ico categories"></i>Create new member</h2>
+            <form class="form" method="POST">
+                {% csrf_token %}
+                {% for field in form %}
+                <li>
+                    <label>{{field.label_tag}}</label>
+                    {{field}}
+                </li>
+                {{field.errors}}
+                {% endfor %}
+
+                <input class="btn green" type="submit" value="Save">
+            </form>
+            
+        </div>
+    </section>
+</div>
+
+{% endblock %}

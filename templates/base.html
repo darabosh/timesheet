@@ -1,0 +1,36 @@
+{% load static %}
+
+
+
+<!DOCTYPE html>
+<!--[if lt IE 7]>      <html class="no-js ie6"> <![endif]-->
+<!--[if IE 7]>         <html class="no-js ie7"> <![endif]-->
+<!--[if IE 8]>         <html class="no-js ie8"> <![endif]-->
+<!--[if gt IE 8]><!--> <html class="no-js"> <!--<![endif]-->
+
+{% include "head.html" %}
+
+<body>
+    <div id="for_pdf" class="container">
+
+        {% include "header.html" %}
+
+        {% block content %}
+        {%endblock%}
+
+        {% block create_new %}
+        {% endblock %}
+
+        {% include "footer.html" %}
+    </div>
+    <script type="text/javascript"></script>
+    {% block open_headings %}
+    {% endblock %}
+    {% block hide_elements_reports_print %}
+    {% endblock %}
+    {% block select_timeslot %}
+    {% endblock %}
+</body>
+</html>
+
+

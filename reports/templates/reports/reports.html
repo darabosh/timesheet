@@ -1,0 +1,195 @@
+{% extends "base.html" %}
+
+{%block content%}
+<div class="wrapper">
+    <section class="content">
+        <h2><i class="ico report"></i>Reports</h2>
+        <div class="grey-box-wrap reports">
+            <form name="form" method="POST" action="{% url 'reports:reports' %}">
+                {% csrf_token %}
+                <ul class="form">
+                    <li>
+                        <label>Team member:</label>
+                        {{form.member}}
+                    </li>
+                    <li>
+                        <label>Category:</label>
+                        {{form.category}}
+                    </li>						
+                </ul>
+                <ul class="form">
+                    <li>
+                        <label>Client:</label>
+                        {{form.client}}
+                    </li>						
+                    <li>
+                        <label>Start date:</label>
+                        {{form.start_date}}
+                    </li>
+                </ul>
+                <ul class="form last">
+                    <li>
+                        <label>Project:</label>
+                        {{form.project}}
+                    </li>
+                    <li>
+                        <label>End date:</label>
+                        {{form.end_date}}
+                    </li>
+                    <li>
+                        <a href="{% url 'reports:reports' %}" class="btn orange right">Reset</a>
+                        <input class="btn green" type="submit" value="Save">
+                    </li>
+                </ul>
+            </form>
+        </div>
+        <table id="table_for_csv" class="default-table">
+            <tr>
+                <th>
+                    Date
+                </th>
+                <th>
+                    Team member
+                </th>
+                <th>
+                    Projects
+                </th>
+                <th>Categories</th>
+                <th>Description</th>
+                <th class="small">Time</th>
+            </tr>
+            {% for timeslot in timeslots %}
+            <tr>
+                <td>
+                    {{timeslot.date|date:"Y-m-d"}}
+                </td>
+                <td>
+                    {{timeslot.member}}
+                </td>
+                <td>
+                    {{timeslot.project}}
+                </td>
+                <td>
+                    {{timeslot.category}}
+                </td>
+                <td>
+                    {{timeslot.description}}
+                </td>
+                <td class="small">
+                    {{timeslot.time}}
+                </td>
+            </tr>
+            {% endfor %}
+        </table>
+        <div class="total">
+            <span>Report total: <em>{{total_hours_report}}</em></span>
+        </div>
+        <div class="grey-box-wrap reports">
+            <div class="btns-inner">
+                <a onclick="print_reports()" class="btn white">
+                    <span>Print report</span>
+                </a>
+                <a id="pdf_button" class="btn white">
+                    <span>Create PDF</span>
+                </a>
+                <button id="button_for_csv" class="btn white">
+                    <span>Export to excel</span>
+                </button>
+            </div>
+        </div>
+    </section>			
+</div>
+{%endblock%}
+{% block hide_elements_reports_print %}
+<script>
+    var selects_clients = document.querySelectorAll("#id_client");
+	var selects_projects = document.querySelectorAll("#id_project");	
+	async function makeRequest(url, method, body){
+
+		let headers = {
+			"X-Requested-With": "XMLHttpRequest",
+			"Content-Type": "application/json"
+		}
+
+		if (method == "post"){
+			const csrf = document.querySelector('[name=csrfmiddlewaretoken]').value
+			headers['X-CSRFToken'] = csrf
+		}
+
+		let response = await fetch(url, {
+			method: method,
+			headers: headers,
+			body: body
+		})
+
+		return await response.json()
+	}
+	async function get_projects_and_set_options(select,selector_number) {
+		
+		const data = await makeRequest('/datetable/days/ajax_get_clients_projects', method='post', body=JSON.stringify({'selector':select, 'selector_number':selector_number}))
+		let options = await data
+		selects_projects[options['selector_number']].options.length=0
+		if (options['projects_options'] == "Choose project:"){
+			var project_option = document.createElement("option");
+			project_option.text = options['projects_options'];
+			selects_projects[options['selector_number']].add(project_option);
+		}
+		else {
+		for (var j=0, len = options['projects_options'].length; j<len; j++){
+			var project_option = document.createElement("option");
+			project_option.text = options['projects_options'][j]['project_name'];
+			selects_projects[options['selector_number']].add(project_option);
+		}
+		}
+	}
+
+	function add_event_listeners_and_classes_to_selectors(){
+		
+		for (var i=0, len = selects_clients.length; i<len; i++){
+			selects_clients[i].addEventListener("change", (e) => {
+				get_projects_and_set_options(event.target.value,event.target.classList.value)});
+			selects_clients[i].classList.add(i);
+			selects_projects[i].classList.add(i);
+			}
+	}
+	add_event_listeners_and_classes_to_selectors();
+
+    function print_reports(){
+        let login = document.querySelector("body > div > header > div.wrapper > ul");
+        login.style.display = "none";
+        let navbar = document.querySelector("body > div > header > div.wrapper > nav");
+        navbar.style.display = "none";
+        let form = document.querySelector("body > div > div > section > div:nth-child(2)");
+        form.style.display = "none";
+        let buttons = document.querySelector("body > div > div > section > div:nth-child(5)");
+        buttons.style.display = "none";
+        let border = document.querySelector("body > div > div > section");
+        border.style.border = "none";
+        print(this);
+    }
+    
+    const button = document.getElementById('pdf_button');
+
+    function generatePDF() {
+        let login = document.querySelector("body > div > header > div.wrapper > ul");
+        login.style.display = "none";
+        let navbar = document.querySelector("body > div > header > div.wrapper > nav");
+        navbar.style.display = "none";
+        let form = document.querySelector("body > div > div > section > div:nth-child(2)");
+        form.style.display = "none";
+        let buttons = document.querySelector("body > div > div > section > div:nth-child(5)");
+        buttons.style.display = "none";
+        let border = document.querySelector("body > div > div > section");
+        border.style.border = "none";
+        const element = document.getElementById('for_pdf');
+        html2pdf().from(element).save();
+    }
+
+    button.addEventListener('click', generatePDF);
+    
+    $('#button_for_csv').on('click', function(){
+        $('#table_for_csv').table2csv();
+    });
+
+</script>
+{% endblock %}
